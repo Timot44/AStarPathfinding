@@ -1,0 +1,14 @@
+
+
+Principe de base : 
+
+Aller d'un point A à un point B par le chemin le plus opti/court
+
+
+
+
+G cost = distance depuis le node de base A ou starting node
+H cost = distance depuis le dernier node B ou end node
+F = G cost + F cost
+
+L'algo va ensuite aller calculer les F pour passer par les plus petit/court F.
