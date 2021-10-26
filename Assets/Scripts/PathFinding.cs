@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class PathFinding : MonoBehaviour
 {
     private Grid _grid;
     public Transform seeker, target;
+    
     private void Awake()
     {
         _grid = GetComponent<Grid>();
@@ -14,18 +16,24 @@ public class PathFinding : MonoBehaviour
 
     private void Update()
     {
-        FindPath(seeker.position, target.position);
+        if (Input.GetButtonDown("Jump"))
+        {
+            FindPath(seeker.position, target.position);
+        }
+        
     }
 
     void FindPath(Vector3 startPos, Vector3 targetPos)
     {
+        Stopwatch sw = new Stopwatch();
+        sw.Start();
         //Point de départ de l'algo (Point A)
         Node startNode = _grid.NodeFromWorldPoint(startPos);
         //Point d'arriver ou celui que l'on veut atteindre de l'algo (Point B)
         Node targetNode = _grid.NodeFromWorldPoint(targetPos);
         
         //On crée notre list de départ de node qui à besoin d'etre évaluer
-        List<Node> openSet = new List<Node>();
+        Heap<Node> openSet = new Heap<Node>(_grid.MaxSize);
         // On crée un hashSet de node qui représente ceux déjà évaluer
         HashSet<Node> closedSet = new HashSet<Node>();
         // On ajoute a notre list openSet le startNode (Point de départ)
@@ -35,25 +43,15 @@ public class PathFinding : MonoBehaviour
         while (openSet.Count > 0)
         {
             //Ici on crée un node de base qui est égale à notre startNode de notre list de départ
-            Node currentNode = openSet[0];
-            //On commence à 1 car on à déja assigner le premier node audessus
-            for (int i = 1; i < openSet.Count; i++)
-            {
-                //Si le fCost de notre node "i" dans notre list de départ est inf à notre currentNode alors currentNode = le node "i"
-                //Ensuite si les 2 node (i et current node) sont égaux et si node "i" hCost est inf à currentNode.hcost alors currentNode = node "i" 
-                if (openSet[i].fCost < currentNode.fCost ||
-                    openSet[i].fCost == currentNode.fCost && openSet[i].hCost < currentNode.hCost)
-                {
-                    currentNode = openSet[i];
-                }
-            }
-            //On remove donc le currentNode de notre list de départ pour l'ajouter à la HashSet "évaluer"
-            openSet.Remove(currentNode);
+            Node currentNode = openSet.RemoveFirst();
+          
             closedSet.Add(currentNode);
             
             //Si la currentNode est égale à la targetNode alors on à trouver notre chemin le plus court
             if (currentNode == targetNode)
             {
+                sw.Stop();
+                print($"Path Found : {sw.ElapsedMilliseconds} ms");
                 RetracePath(startNode, targetNode);
                 return;
             }

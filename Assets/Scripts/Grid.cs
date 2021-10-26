@@ -18,6 +18,14 @@ public class Grid : MonoBehaviour
     private int _gridSizeX, _gridSizeY;
 
     public List<Node> path;
+
+    public bool onlyDisplayPathGizmos;
+
+    public int MaxSize
+    {
+        get { return _gridSizeX * _gridSizeY; }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -28,31 +36,44 @@ public class Grid : MonoBehaviour
         CreateGrid();
     }
 
-   
+
     private void OnDrawGizmos()
     {
         //Dessine un cube avec la taille de la gridWorldSize en paramètre
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
-        if (_grid != null)
+        if (onlyDisplayPathGizmos)
         {
-            //Pour chaque node dans le tableau 2D de _grid si le node est considérer comme "walkable" la couleur est blanche sinon elle est rouge
-            foreach (Node n in _grid)
+            if (path != null)
             {
-                Gizmos.color = (n.walkable) ? Color.white : Color.red;
-                //Si notre path n'est pas null et qu'il contient les node dans notre list grid alors la couleur du chemin l plus court est cyan
-                if (path !=null)
+                foreach (Node n in path)
                 {
-                    if (path.Contains(n))
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter - .1f));
+                }
+            }
+        }
+        else
+        {
+            if (_grid != null)
+            {
+                //Pour chaque node dans le tableau 2D de _grid si le node est considérer comme "walkable" la couleur est blanche sinon elle est rouge
+                foreach (Node n in _grid)
+                {
+                    Gizmos.color = (n.walkable) ? Color.white : Color.red;
+                    //Si notre path n'est pas null et qu'il contient les node dans notre list grid alors la couleur du chemin l plus court est cyan
+                    if (path != null)
                     {
-                        Gizmos.color = Color.cyan;
+                        if (path.Contains(n))
+                        {
+                            Gizmos.color = Color.cyan;
+                        }
+
+                        Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter - .1f));
                     }
                 }
-                
-                Gizmos.DrawCube(n.worldPosition, Vector3.one * (_nodeDiameter-.1f));
             }
         }
     }
-
 
 
     public Node NodeFromWorldPoint(Vector3 worldPosition)
@@ -63,7 +84,7 @@ public class Grid : MonoBehaviour
         percentY = Mathf.Clamp01(percentY);
 
         int x = Mathf.RoundToInt(_gridSizeX * percentX);
-        int y = Mathf.RoundToInt(_gridSizeY  * percentY);
+        int y = Mathf.RoundToInt(_gridSizeY * percentY);
         x = Mathf.Clamp(x, 0, _gridSizeX - 1);
         y = Mathf.Clamp(y, 0, _gridSizeY - 1);
         return _grid[x, y];
@@ -77,7 +98,6 @@ public class Grid : MonoBehaviour
         //On loop dans un block de 3/3 (x= -1,0,1 / y = -1,0,1)
         for (int x = -1; x <= 1; x++)
         {
-            
             for (int y = -1; y <= 1; y++)
             {
                 // On skip l'itération 0 car c'est le node de base
@@ -92,12 +112,13 @@ public class Grid : MonoBehaviour
                     //Si tel est le cas on ajoute ce node dans notre list de node "voisins"
                     neighbours.Add(_grid[checkX, checkY]);
                 }
-                
             }
         }
+
         // On return notre list de node "voisins"
         return neighbours;
     }
+
     void CreateGrid()
     {
         //On populate notre tableau 2D avec notre gridSize
@@ -114,7 +135,7 @@ public class Grid : MonoBehaviour
                 //Si dans un certain nodeRadius on touche un objet qui n'est pas dans le mask unwalkable alors le bool est true sinon le node est dit "unwalkable"
                 bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unWalkableMask));
                 //On ajoute dans notre tableau de node les points avec le constructor
-                _grid[x, y] = new Node(walkable, worldPoint, x, y); 
+                _grid[x, y] = new Node(walkable, worldPoint, x, y);
             }
         }
     }
